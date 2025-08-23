@@ -1,0 +1,23 @@
+Django==4.2.16
+djangorestframework==3.16.1
+django-redis==6.0.0
+
+#   Libreria de conexion a DB - PostgreSQL
+psycopg2==2.9
+
+#   Paquete de Python para proyectos Django que facilita el uso de variables de entorno
+django-environ==0.12.0
+
+#   Servidor web ASGI rápido y ligero para aplicaciones Python
+uvicorn==0.32.0
+
+#   Extiende las capacidades de Django - Framework 
+#   para manejar protocolos asincronos (WebSockets, chat, IoT)
+#   permitiendo manejar conexiones persistentes y eventos en tiempo real
+channels==4.1.0
+channels-redis==4.2.0
+
+#   WhiteNoise, es una herramienta útil para servir archivos estáticos de manera 
+#   eficiente y sencilla desde tu aplicación Django, especialmente en entornos donde 
+#   no se requiere un servidor web externo para esta tarea. 
+whitenoise==6.9.0
