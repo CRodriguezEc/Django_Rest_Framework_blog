@@ -45,7 +45,9 @@ DJANGO_APPS = [
 ]
 
 #   LAS APLICACIONES PROPIAS DEL PROYECTO
-PROJECT_APPS = []
+PROJECT_APPS = [
+    'apps.blog',
+]
 
 #   APLICACIONES DE 3ros COMO FRAMEWORKS, LIBRERIAS...
 THIRD_PARTY_APPS = [
@@ -163,6 +165,9 @@ STATIC_LOCATION = 'static'
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join( BASE_DIR, "static" )
 
+#   Directorio de ubicacion de archivos de imagen o archivos multimedia
+MEDIA_URL = 'media/'
+MEDIA_ROOT = 'os.path.join( BASE_DIR, "media" )'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
