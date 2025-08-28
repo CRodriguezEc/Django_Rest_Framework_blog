@@ -4,10 +4,11 @@ from .models import Post
 from .serializers import PostListSerializer, PostSerializer
 
 class PostListView(ListAPIView):
-    queryset = Post.postObjects.all()
+    #   Listamos todos los objetos publicados, ya que forma parte de la clase post
+    queryset = Post.postobjects.all
     serializer_class = PostListSerializer
 
 class PostDetailView(RetrieveAPIView):
-    queryset = Post.postObjects.all()
+    queryset = Post.postObjects.all
     serializer_class = PostSerializer
     lookup_field = 'slug'
