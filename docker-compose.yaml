@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   backend:
     container_name: django
@@ -11,6 +10,7 @@ services:
       - 8081:8081
     depends_on:
       - django_redis
+    restart: always
 
   django_redis:
     image: redis
@@ -19,14 +19,20 @@ services:
       - 6379:6379
 
   django_db:
-    image: postgres
+    image: postgres:16
     container_name: postgresql
-    restart: always
+    volumes:
+      - ../data:/var/lib/postgresql/data/
     environment:
       POSTGRES_DB: django_db
       POSTGRES_USER: django
       POSTGRES_PASSWORD: postgres
     ports:
       - 5432:5432
-    volumes:
-      - .dbdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -d django_db -U django"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  pg_data:

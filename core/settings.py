@@ -53,11 +53,15 @@ PROJECT_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'channels',
+    'ckeditor',
+    'ckeditor_uploader'
 ]
 
 #   UNION DE LOS APLICACIONES SEGMENTADAS
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 
+CKEDITOR_CONFIGS = {"default":{"toolbar": "full", "autoParagraph": False}}
+CKEDITOR_UPLOAD_PATH = "media/"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -167,7 +171,7 @@ STATIC_ROOT = os.path.join( BASE_DIR, "static" )
 
 #   Directorio de ubicacion de archivos de imagen o archivos multimedia
 MEDIA_URL = 'media/'
-MEDIA_ROOT = 'os.path.join( BASE_DIR, "media" )'
+MEDIA_ROOT = os.path.join( BASE_DIR, "media" )
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

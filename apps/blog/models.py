@@ -3,13 +3,15 @@ import uuid
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+from ckeditor.fields import RichTextField
 
 
 def blog_tumbnail_directory(instance, filename):
     return "blog/{0}/{1}".format( instance.title, filename )
 
 def category_tumbnail_directory(instance, filename):
-    return "blog_categories/{0}/{1}".format(instance.name, filename )
+    return "blog_categories/{0}/{1}".format( instance.name, filename )
+
 
 class Category(models.Model):
 
@@ -52,14 +54,15 @@ class Post( models.Model ):
 
     title = models.CharField(max_length=128)
     description= models.CharField(max_length=256)
-    content = models.TextField()
-    tumbnail = models.ImageField(upload_to='blog_post/')
+    # content = models.TextField()  #   Solo caja de texto
     
+    #   Asociamos el CKEditor a la caja de texto
+    content = RichTextField()       
+    tumbnail = models.ImageField(upload_to='blog_post/')
     keywords = models.CharField(max_length=128)
     slug = models.CharField(max_length=128)
     
     category = models.ForeignKey(Category, on_delete=models.PROTECT, )
-    
     created_at = models.DateTimeField(default=timezone.now)
     
     #   Al momento de editar el post, automaticamente actualiza la fecha de edición del post
@@ -77,7 +80,8 @@ class Post( models.Model ):
         
     def __str__(self):
         return self.title
-    
+
+
 #   Permite la navegabilidad dentro del contenido del blog (usabilidad tipo menu)
 class Heading( models.Model ):
     #   Clave primaria de la tabla Heading
