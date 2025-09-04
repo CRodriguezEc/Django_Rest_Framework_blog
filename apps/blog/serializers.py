@@ -45,5 +45,5 @@ class PostListSerializer(serializers.ModelSerializer):
                     "tumbnail",
                     "slug",
                     "category",
-                    "updated_at" ]
+                    "intNumVisitas" ]
 

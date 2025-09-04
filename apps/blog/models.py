@@ -68,12 +68,18 @@ class Post( models.Model ):
     #   Al momento de editar el post, automaticamente actualiza la fecha de edición del post
     updated_at = models.DateTimeField(auto_now=True)
     
+    #   Contador de visitas a un determinado "post"
+    intNumVisitas = models.IntegerField
+
     status = models.CharField(  max_length=16
                                 , choices = status_options
                                 , default= 'draft' )
     
-    objects = models.Manager() #default manager
-    postobjects = postObjects() #custom manager
+    #default manager
+    objects = models.Manager()
+
+    #custom manager
+    postobjects = postObjects() 
     
     class Meta:
         ordering = ("status", "-created_at")
@@ -97,14 +103,12 @@ class Heading( models.Model ):
     slug = models.CharField(max_length=255)
     #   Admite numeros positivos / negativos
     level = models.IntegerField(
-        choices=(
-            (1, "H1"),
-            (2, "H2"),
-            (3, "H3"),
-            (4, "H4"),
-            (5, "H5"),
-            (6, "H6")
-        )
+        choices=(   (1, "H1"),
+                    (2, "H2"),
+                    (3, "H3"),
+                    (4, "H4"),
+                    (5, "H5"),
+                    (6, "H6") )
     )
 
     #   Admite solo valores positivos
@@ -115,7 +119,8 @@ class Heading( models.Model ):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            #   Elimina los espacios en blanco en una cadena y los reemplaza por guio nes, p.e.: "casa de lola" a "casa-de-lola"
+            #   Elimina los espacios en blanco en una cadena y los reemplaza por guiones, 
+            #   p.e.: "casa de lola" a "casa-de-lola"
             self.slug = slugify(self.title)
 
         super().save(*args, **kwargs)
