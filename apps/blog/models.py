@@ -68,7 +68,7 @@ class Post( models.Model ):
     updated_at = models.DateTimeField(auto_now=True)
     
     #   Contador de visitas a un determinado "post"
-    intNumVisitas = models.IntegerField( default = 1 )
+    intNumVisitas = models.IntegerField( default = 0 )
 
     status = models.CharField(  max_length=16
                                 , choices = status_options
