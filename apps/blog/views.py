@@ -2,8 +2,9 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Post, Heading
-from .serializers import PostListSerializer, PostSerializer, HeadingSerializer
+from .models import Post, Heading, PostView
+from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
+from .utils import get_client_ip
 
 # class PostListView(ListAPIView):
 #     #   Listamos todos los objetos publicados, ya que forma parte de la clase post
@@ -32,13 +33,15 @@ class PostDetailView(RetrieveAPIView):
     def get(self, request, slug):
         post = Post.postobjects.get(slug=slug)
         serialized_post = PostSerializer(post).data
+        
+        client_ip = get_client_ip(request)
 
-        post.intNumVisitas += 1
-        post.save()
+        if PostView.objects.filter(post=post, ip_address=client_ip).exists():
+            return Response( serialized_post )
+
+        PostView.objects.create(post=post, ip_address=client_ip )
 
         return Response(serialized_post)
-
-
 
 
 #   Obtenemos los heading de un determinado post

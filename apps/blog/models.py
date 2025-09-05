@@ -68,7 +68,7 @@ class Post( models.Model ):
     updated_at = models.DateTimeField(auto_now=True)
     
     #   Contador de visitas a un determinado "post"
-    intNumVisitas = models.IntegerField( default = 0 )
+    # intNumVisitas = models.IntegerField( default = 0 )
 
     status = models.CharField(  max_length=16
                                 , choices = status_options
@@ -83,8 +83,22 @@ class Post( models.Model ):
     class Meta:
         ordering = ("status", "-created_at")
         
+    # @property
+    # def views( self ):
+    #     # Your logic to calculate views
+    #     return 0  # Replace with actual logic
+
     def __str__(self):
         return self.title
+
+
+
+class PostView(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(Post, on_delete=models.PROTECT, related_name='post_view')
+    ip_address = models.GenericIPAddressField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 
 
 #   Permite la navegabilidad dentro del contenido del blog (usabilidad tipo menu)
