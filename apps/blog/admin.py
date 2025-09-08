@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Post, Heading
+from .models import Category, Post, Heading, PostAnalytics
 
 @admin.register(Category)
 class CategotyAdmin(admin.ModelAdmin):
@@ -34,6 +34,19 @@ class PostAdmin(admin.ModelAdmin):
     )
     
     inlines = [HeadingInLine]
+
+
+@admin.register(PostAnalytics)
+class PostAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ('post_title', 'views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page', )
+    search_fields = ('post_title',)
+    readonly_fields = ('views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page',)
+    
+    def post_title(self, obj):
+        return obj.post.title
+    
+    post_title.short_description = 'Post Title'
+
 
 #
 # Esta opcion se comenta debido a que los Headings ya se estan 

@@ -1,10 +1,17 @@
 import uuid
 
 from django.db import models
+
+#   Es un evento, Señales para eventos (SIGNAL)
+from django.db.models.signals import post_save
+
+#   Metodo escucha las señales (SIGNAL) y se ejecuta una accion en respuesta a ellas - RECEPTOR
+from django.dispatch import receiver
+
 from django.utils import timezone
 from django.utils.text import slugify
 from ckeditor.fields import RichTextField
-
+from .utils import get_client_ip
 
 def blog_tumbnail_directory(instance, filename):
     return "blog/{0}/{1}".format( instance.title, filename )
@@ -86,11 +93,53 @@ class Post( models.Model ):
     def __str__(self):
         return self.title
 
+
 class PostView(models.Model):
     id = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False)    
-    post = models.ForeignKey(Post, on_delete = models.PROTECT, related_name = 'post_view',)    
+    post = models.ForeignKey(Post, on_delete = models.CASCADE, related_name = 'post_view',)
     ip_address = models.GenericIPAddressField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class PostAnalytics(models.Model):
+    id = models.UUIDField(primary_key = True, default = uuid.uuid4, editable = False)
+    post = models.ForeignKey(Post, on_delete = models.CASCADE, related_name = 'post_analitycs',)
+
+    #   Se incrementa cuando un usuario mira la descripcion del post
+    impressions = models.PositiveIntegerField(default=0)
+
+    #   Se incrementa cuando el usuario mira e ingresa al post    
+    views = models.PositiveIntegerField(default=0)
+
+    #   Se incrementa cuando el usuario da click en post para ingresar al detalle del post
+    clicks = models.PositiveIntegerField(default=0)
+
+    #   Se incrementa cuando el usuario a dado click, visto la descripcion del post, ingresado al post
+    click_through_rate = models.FloatField(default=0)
+    
+    #   El tiempo que el usuario pasa en el post (lee)
+    avg_time_on_page = models.FloatField(default=0)
+    
+    def increment_click(self):
+        self.click += 1
+        self._update_click_through_rate()
+        
+    def _update_click_through_rate(self):
+        if self.impressions > 0:
+            self.click_through_rate = ( self.clicks / self.impressions ) * 100
+
+    def increment_impressions(self):
+        self.impressions += 1
+        self._update_click_through_rate()
+
+    def increment_view(self, request):
+        ip_address = get_client_ip(request)
+        
+        if not PostView.objects.filter(post = self.post, ip_address = ip_address).exists():
+            PostView.objects.create(post = self.post, ip_address = ip_address)
+            self.views += 1
+            self.save()
+
 
 #   Permite la navegabilidad dentro del contenido del blog (usabilidad tipo menu)
 class Heading( models.Model ):
@@ -100,7 +149,7 @@ class Heading( models.Model ):
                             , editable=False )
     
     post = models.ForeignKey(   Post
-                                ,   on_delete=models.PROTECT
+                                ,   on_delete=models.CASCADE
                                 ,   related_name='headings' )
     
     title = models.CharField(max_length=255)
@@ -130,4 +179,7 @@ class Heading( models.Model ):
         super().save(*args, **kwargs)
 
 
-
+@receiver( post_save, sender=Post )
+def create_post_analytics( sender, instance, created, **kwargs ):
+    if created:
+        PostAnalytics.objects.create(post=instance)
