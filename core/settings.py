@@ -182,7 +182,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES":[
         #   Si un usuario esta autenticado puede hacer uso del API completo, caso contrario solo hace uso de los metodos GET
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly"
+        #   "rest_framework.permissions.IsAuthenticatedOrReadOnly"
+        
+        #   Cualquier usuario puede hacer uso del API completo
+        "rest_framework.permissions.AllowAny"
     ]
 }
 

@@ -1,6 +1,8 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.views import APIView
+from rest_framework import permissions
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound, APIException
 
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
@@ -14,11 +16,19 @@ from .utils import get_client_ip
 
 class PostListView(APIView):
     def get(self, request, *args, **kwargs):
-        #   Obtengo todos los post registrados, de tipo "Published"
-        posts = Post.postobjects.all()
+        try:
+            #   Obtengo todos los post registrados, de tipo "Published"
+            posts = Post.postobjects.all()
 
-        #   Convierto la lista de post en formato JSon
-        serialized_post = PostListSerializer(posts, many=True).data
+            if not posts.exists():
+                raise NotFound(detail="No post found")
+            
+            #   Convierto la lista de post en formato JSon
+            serialized_post = PostListSerializer(posts, many=True).data
+        except Post.DoesNotExist:
+            raise NotFound(detail="No post found.")
+        except Exception as e:
+            raise APIException(detail=f"An unexpected error ocurred: {str(e)}")
 
         return Response(serialized_post)
 
@@ -31,7 +41,13 @@ class PostListView(APIView):
 
 class PostDetailView(RetrieveAPIView):
     def get(self, request, slug):
-        post = Post.postobjects.get(slug=slug)
+        try:
+            post = Post.postobjects.get(slug=slug)
+        except Post.DoesNotExist:
+            raise NotFound(detail="The requested post does not exists")
+        except Exception as e:
+            raise APIException(detail=f"An unexpected error ocurreed: {str(e)}")
+        
         serialized_post = PostSerializer(post).data
         
         #
@@ -50,8 +66,13 @@ class PostDetailView(RetrieveAPIView):
 
         #
         #   Gestiona el control de visitas desde la opcion "Analitica"
-        post_analytics = PostAnalytics.objects.get(post=post)
-        post_analytics.increment_view(request)
+        try:
+            post_analytics = PostAnalytics.objects.get(post=post)
+            post_analytics.increment_view(request)
+        except PostAnalytics.DoesNotExist:
+            raise NotFound(detail="Analytics data for this post does not exists")
+        except Exception as e:
+            raise APIException(detail=f"An error ocurred while updating post analytics:---> {str(e)}")
 
         #   Retorno la informacion del post
         return Response(serialized_post)
@@ -64,3 +85,27 @@ class PostHeadingView(ListAPIView):
     def get_queryset(self):
         post_slug = self.kwargs.get("slug")
         return Heading.objects.filter( post__slug = post_slug )
+    
+    
+class IncrementPostClickView(APIView):
+    def post(self, request):
+        # Incrementa el contador de cliks de un post basado en slugs
+        data = request.data
+
+        try:
+            post = Post.postobjects.get( slug = data['slug'] )
+        except Post.DoesNotExist:
+            raise NotFound(detail="The request post not exist")
+        
+        try:
+            #   Intenta obtener un objeto "post_analitics" de tipo "post", sino existe creo uno nuevo
+            #   la variable "created" es de tipo boolean e indica si el objeto se creo (true) o se encontro (false)
+            post_analytics, created = PostAnalytics.objects.get_or_create(post=post)
+            post_analytics.increment_click()
+        except Exception as e:
+            raise APIException(detail=f"An error ocurred while updating post analytics:>>>>> {str(e)}")
+        
+        return Response({
+            "message": "Click increment successfully"
+            ,   "clicks": post_analytics.clicks
+        })

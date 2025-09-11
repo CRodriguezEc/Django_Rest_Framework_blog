@@ -121,15 +121,18 @@ class PostAnalytics(models.Model):
     avg_time_on_page = models.FloatField(default=0)
     
     def increment_click(self):
-        self.click += 1
+        self.clicks += 1
+        self.save()
         self._update_click_through_rate()
         
     def _update_click_through_rate(self):
         if self.impressions > 0:
             self.click_through_rate = ( self.clicks / self.impressions ) * 100
+            self.save()
 
     def increment_impressions(self):
         self.impressions += 1
+        self.save()
         self._update_click_through_rate()
 
     def increment_view(self, request):
@@ -137,6 +140,7 @@ class PostAnalytics(models.Model):
         
         if not PostView.objects.filter(post = self.post, ip_address = ip_address).exists():
             PostView.objects.create(post = self.post, ip_address = ip_address)
+            
             self.views += 1
             self.save()
 
