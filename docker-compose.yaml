@@ -12,12 +12,19 @@ services:
       - django_redis
     restart: always
 
+  # Redis
   django_redis:
     image: redis
     container_name: django_redis
     ports:
       - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
+  # Database
   django_db:
     image: postgres:16
     container_name: postgresql
@@ -34,5 +41,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  celery_worker:
+    container_name: blog_celery_worker
+    build: .
+    command: celery -A core worker --loglevel=info
+    volumes:
+      - .:/app
+    ports:
+      - 8082:8082
+    # depends_on:
+    #   django_redis:
+    #     condition: service_healthy
+    #   django_db:
+    #     condition: service_healthy
+
 volumes:
   pg_data:

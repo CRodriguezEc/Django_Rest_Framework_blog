@@ -27,3 +27,8 @@ channels-redis==4.2.0
 #   eficiente y sencilla desde tu aplicación Django, especialmente en entornos donde 
 #   no se requiere un servidor web externo para esta tarea. 
 whitenoise==6.9.0
+
+#   Permite ejecutar tareas en segundo plano o asincrónicas para mejorar la experiencia 
+#   del usuario al no tener que esperar a que se completen tareas que consumen mucho tiempo
+celery==5.4.0
+django-celery-results==2.5.1

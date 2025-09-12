@@ -54,7 +54,8 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'channels',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
+    'django_celery_results',
 ]
 
 #   UNION DE LOS APLICACIONES SEGMENTADAS
@@ -215,3 +216,26 @@ CACHES = {
 #   Configuración que define qué orígenes (URLs) están permitidos para realizar solicitudes a un proyecto basado en Channels
 #   Esencialmente, ayuda a controlar el Acceso de Recursos de Origen Cruzado (CORS) para proteger tu aplicación contra ataques maliciosos
 CHANNELS_ALLOWED_ORIGINS = "http://localhost:3000"
+
+########################
+# PARAMETRIZACION CELERY
+########################
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "America/Guayaquil"
+
+CELERY_BROKER_URL = env("REDIS_URL")
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 3600
+    ,   'socket_timeout': 5
+    ,   'retry_on_timeout': True
+}
+
+CELERY_RESULT_BACKEND = 'django_db'
+CELERY_CACHE_BACKEND = 'default'
+
+CELERY_IMPORTS = (
+    'core.task',
+)
