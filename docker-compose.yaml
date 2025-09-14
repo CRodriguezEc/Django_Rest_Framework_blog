@@ -10,6 +10,7 @@ services:
       - 8081:8081
     depends_on:
       - django_redis
+      - django_db
     restart: always
 
   # Redis
@@ -50,11 +51,9 @@ services:
       - .:/app
     ports:
       - 8082:8082
-    # depends_on:
-    #   django_redis:
-    #     condition: service_healthy
-    #   django_db:
-    #     condition: service_healthy
+    depends_on:
+      - django_redis
+      - django_db
 
 volumes:
   pg_data:

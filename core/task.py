@@ -13,4 +13,4 @@ django.setup()
 
 @shared_task
 def test_task():
-    logger.info("Test CELERY - RNCL")
+    logger.info("Test CELERY - RNCL/ 14SEP2025")

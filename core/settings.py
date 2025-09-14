@@ -233,7 +233,7 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     ,   'retry_on_timeout': True
 }
 
-CELERY_RESULT_BACKEND = 'django_db'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
 
 CELERY_IMPORTS = (
