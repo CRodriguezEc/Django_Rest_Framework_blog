@@ -32,3 +32,4 @@ whitenoise==6.9.0
 #   del usuario al no tener que esperar a que se completen tareas que consumen mucho tiempo
 celery==5.4.0
 django-celery-results==2.5.1
+django-celery-beat>=2.7.0
