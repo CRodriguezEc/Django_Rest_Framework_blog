@@ -238,4 +238,5 @@ CELERY_CACHE_BACKEND = 'default'
 
 CELERY_IMPORTS = (
     'core.task',
+    'apps.blog.tasks',
 )

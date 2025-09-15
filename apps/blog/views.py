@@ -7,6 +7,7 @@ from rest_framework.exceptions import NotFound, APIException
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
 from .utils import get_client_ip
+from .tasks import increment_post_impressions
 
 # class PostListView(ListAPIView):
 #     #   Listamos todos los objetos publicados, ya que forma parte de la clase post
@@ -25,6 +26,11 @@ class PostListView(APIView):
             
             #   Convierto la lista de post en formato JSon
             serialized_post = PostListSerializer(posts, many=True).data
+            
+            for post in posts:
+                #   Para ejecutar la tarea hacemos uso del metodo delay
+                increment_post_impressions.delay(post.id)
+            
         except Post.DoesNotExist:
             raise NotFound(detail="No post found.")
         except Exception as e:
