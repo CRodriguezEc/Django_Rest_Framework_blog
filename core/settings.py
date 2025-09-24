@@ -56,6 +56,7 @@ THIRD_PARTY_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'django_celery_results',
+    'django_celery_beat',
 ]
 
 #   UNION DE LOS APLICACIONES SEGMENTADAS
@@ -202,6 +203,7 @@ CHANNELS_LAYERS = {
     }
 }
 
+REDIS_HOST = env('REDIS_HOST')
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -240,3 +242,6 @@ CELERY_IMPORTS = (
     'core.task',
     'apps.blog.tasks',
 )
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {}
