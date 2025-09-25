@@ -1,34 +1,39 @@
-Django==4.2.16
-djangorestframework==3.16.1
-django-redis==6.0.0
-
-#   Libreria de conexion a DB - PostgreSQL
-psycopg2==2.9
-
-#   Paquete de Python para proyectos Django que facilita el uso de variables de entorno
-django-environ==0.12.0
-
-#   CKEditor - Gestior de texto enriquecido
-django-ckeditor==6.7.3
-
-#   Biblioteca de procesamiento de imagenes en Python
-pillow==11.0.0
-
-#   Servidor web ASGI rápido y ligero para aplicaciones Python
-uvicorn==0.32.0
-
-#   Extiende las capacidades de Django - Framework 
-#   para manejar protocolos asincronos (WebSockets, chat, IoT)
-#   permitiendo manejar conexiones persistentes y eventos en tiempo real
+amqp==5.3.1
+asgiref==3.9.2
+async-timeout==5.0.1
+billiard==4.2.2
+celery==5.4.0
 channels==4.1.0
 channels-redis==4.2.0
-
-#   WhiteNoise, es una herramienta útil para servir archivos estáticos de manera 
-#   eficiente y sencilla desde tu aplicación Django, especialmente en entornos donde 
-#   no se requiere un servidor web externo para esta tarea. 
-whitenoise==6.9.0
-
-#   Permite ejecutar tareas en segundo plano o asincrónicas para mejorar la experiencia 
-#   del usuario al no tener que esperar a que se completen tareas que consumen mucho tiempo
-celery==5.4.0
+click==8.1.8
+click-didyoumean==0.3.1
+click-plugins==1.1.1.2
+click-repl==0.3.0
+cron_descriptor==2.0.6
+Django==4.2.16
+django-celery-beat==2.8.1
 django-celery-results==2.5.1
+django-ckeditor==6.7.3
+django-environ==0.12.0
+django-js-asset==2.2.0
+django-redis==6.0.0
+django-timezone-field==7.1
+djangorestframework==3.16.1
+h11==0.16.0
+kombu==5.5.4
+msgpack==1.1.1
+packaging==25.0
+pillow==11.0.0
+prompt_toolkit==3.0.52
+psycopg2==2.9
+python-crontab==3.3.0
+python-dateutil==2.9.0.post0
+redis==6.4.0
+six==1.17.0
+sqlparse==0.5.3
+typing_extensions==4.15.0
+tzdata==2025.2
+uvicorn==0.32.0
+vine==5.1.0
+wcwidth==0.2.14
+whitenoise==6.9.0
