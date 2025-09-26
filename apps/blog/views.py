@@ -32,15 +32,14 @@ class PostListView(APIView):
             #   Convierto la lista de post en formato JSon
             serialized_post = PostListSerializer(posts, many=True).data
             
+            # Registro en redis el post_id del post gestionado
             for post in posts:
                 redis_client.incr(f"post:impressions:{post.id}")
-                
-            serialized_post = PostListSerializer(post, many=True).data
-            
+
         except Post.DoesNotExist:
             raise NotFound(detail="No post found.")
         except Exception as e:
-            raise APIException(detail=f"An unexpected error ocurred: {str(e)}")
+            raise APIException(detail=f"An unexpected error ocurred PostListView - L042: {str(e)}")
 
         return Response(serialized_post)
 
