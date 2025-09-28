@@ -1,0 +1,41 @@
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Remote Attach",
+                "type": "debugpy",
+                "request": "attach",
+                "port": 8081, // The port debugpy is listening on inside the container
+                "host": "localhost", // Or the IP address of your Docker container if not using localhost
+                "pathMappings": [
+                    {
+                        "localRoot": "${workspaceFolder}/your_django_project_folder", // Your local project root
+                        "remoteRoot": "/app" // Path inside the container
+                    }
+                ],
+                "justMyCode": false // Set to false to debug third-party libraries
+            }
+        ]
+    }
+
+
+// 
+//
+//  BKP - 27SEP2025
+// {
+//     // Use IntelliSense to learn about possible attributes.
+//     // Hover to view descriptions of existing attributes.
+//     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python Debugger: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${file}",
+//             "console": "integratedTerminal"
+//         }
+//     ]
+// }
+//
+//

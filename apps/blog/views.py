@@ -9,8 +9,11 @@ from django.conf import settings
 
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
-from .utils import get_client_ip
-from .tasks import increment_post_impressions
+# from .utils import get_client_ip
+# from .tasks import increment_post_impressions
+
+# Importo la clase HasValidAPIKey, ubicada en el directorio core, en el archivo permissions
+from core.permissions import HasValidAPIKey
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
@@ -21,6 +24,9 @@ redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 #     serializer_class = PostListSerializer
 
 class PostListView(APIView):
+    #   Valida si el usuario tiene el key de ingreso
+    permissions_classes = [HasValidAPIKey]
+    
     def get(self, request, *args, **kwargs):
         try:
             #   Obtengo todos los post registrados, de tipo "Published"
@@ -43,14 +49,15 @@ class PostListView(APIView):
 
         return Response(serialized_post)
 
-
 # class PostDetailView(RetrieveAPIView):
 #     queryset = Post.postobjects.all()
 #     serializer_class = PostSerializer
 #     lookup_field = 'slug'
 
-
 class PostDetailView(RetrieveAPIView):
+    #   Valida si el usuario tiene el key de ingreso
+    permissions_classes = [HasValidAPIKey]
+    
     def get(self, request, slug):
         try:
             post = Post.postobjects.get(slug=slug)
@@ -91,6 +98,9 @@ class PostDetailView(RetrieveAPIView):
 
 #   Obtenemos los heading de un determinado post
 class PostHeadingView(ListAPIView):
+    #   Valida si el usuario tiene el key de ingreso
+    permissions_classes = [HasValidAPIKey]
+    
     serializer_class = HeadingSerializer
     
     def get_queryset(self):
@@ -99,6 +109,9 @@ class PostHeadingView(ListAPIView):
     
     
 class IncrementPostClickView(APIView):
+    #   Valida si el usuario tiene el key de ingreso
+    permissions_classes = [HasValidAPIKey]
+    
     def post(self, request):
         # Incrementa el contador de cliks de un post basado en slugs
         data = request.data
