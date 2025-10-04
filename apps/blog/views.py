@@ -7,26 +7,24 @@ from rest_framework.exceptions import NotFound, APIException
 import redis
 from django.conf import settings
 
+#   CACHE
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
-# from .utils import get_client_ip
-# from .tasks import increment_post_impressions
 
 # Importo la clase HasValidAPIKey, ubicada en el directorio "core", en el archivo permissions
 from core.permissions import HasValidAPIKey
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
-# class PostListView(ListAPIView):
-#     #   Listamos todos los objetos publicados, ya que forma parte de la clase post
-#     #   considerar este metodo se implementa
-#     queryset = Post.postobjects.all()
-#     serializer_class = PostListSerializer
-
 class PostListView(APIView):
     #   Valida si el usuario tiene el key de ingreso
     permission_classes = [HasValidAPIKey]
     
+    #   Cache por un minuto (60 * 1)
+    @method_decorator(cache_page(60 * 1))
     def get(self, request, *args, **kwargs):
         try:
             #   Obtengo todos los post registrados, de tipo "Published"
@@ -48,11 +46,6 @@ class PostListView(APIView):
             raise APIException(detail=f"An unexpected error ocurred PostListView - L042: {str(e)}")
 
         return Response(serialized_post)
-
-# class PostDetailView(RetrieveAPIView):
-#     queryset = Post.postobjects.all()
-#     serializer_class = PostSerializer
-#     lookup_field = 'slug'
 
 class PostDetailView(RetrieveAPIView):
     #   Valida si el usuario tiene el key de ingreso
@@ -95,7 +88,6 @@ class PostDetailView(RetrieveAPIView):
         #   Retorno la informacion del post
         return Response(serialized_post)
 
-
 #   Obtenemos los heading de un determinado post
 class PostHeadingView(ListAPIView):
     #   Valida si el usuario tiene el key de ingreso
@@ -106,7 +98,6 @@ class PostHeadingView(ListAPIView):
     def get_queryset(self):
         post_slug = self.kwargs.get("slug")
         return Heading.objects.filter( post__slug = post_slug )
-
 
 class IncrementPostClickView(APIView):
     #   Valida si el usuario tiene el key de ingreso
