@@ -183,14 +183,15 @@ MEDIA_ROOT = os.path.join( BASE_DIR, "media" )
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #   PARAMETRIZAMOS LA AUTENTICACION AL "API"
+#   "rest_framework.permissions.AllowAny"
+#       Si un usuario esta autenticado puede hacer uso del API completo, caso contrario solo hace uso de los metodos GET
+            #   "rest_framework.permissions.IsAuthenticatedOrReadOnly" 
+            #   Cualquier usuario puede hacer uso del API completo
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES":[
-        #   Si un usuario esta autenticado puede hacer uso del API completo, caso contrario solo hace uso de los metodos GET
-        #   "rest_framework.permissions.IsAuthenticatedOrReadOnly"
-        
-        #   Cualquier usuario puede hacer uso del API completo
-        "rest_framework.permissions.AllowAny"
-    ]
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+        "core.permissions.HasValidAPIKey",
+    ],
 }
 
 

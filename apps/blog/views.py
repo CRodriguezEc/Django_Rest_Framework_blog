@@ -9,10 +9,10 @@ from django.conf import settings
 
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
-from .utils import get_client_ip
-from .tasks import increment_post_impressions
+# from .utils import get_client_ip
+# from .tasks import increment_post_impressions
 
-# Importo la clase HasValidAPIKey, ubicada en el directorio core, en el archivo permissions
+# Importo la clase HasValidAPIKey, ubicada en el directorio "core", en el archivo permissions
 from core.permissions import HasValidAPIKey
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
@@ -25,8 +25,8 @@ redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
 class PostListView(APIView):
     #   Valida si el usuario tiene el key de ingreso
-    permissions_classes = [HasValidAPIKey]
-        
+    permission_classes = [HasValidAPIKey]
+    
     def get(self, request, *args, **kwargs):
         try:
             #   Obtengo todos los post registrados, de tipo "Published"
