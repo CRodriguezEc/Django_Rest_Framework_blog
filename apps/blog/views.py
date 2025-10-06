@@ -10,6 +10,8 @@ from django.conf import settings
 #   CACHE
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+#   Libreria para cache manual
+from django.core.cache import cache
 
 from .models import Post, Heading, PostView, PostAnalytics
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostViewSerializer
@@ -24,24 +26,39 @@ class PostListView(APIView):
     permission_classes = [HasValidAPIKey]
     
     #   Cache por un minuto (60 * 1)
-    @method_decorator(cache_page(60 * 1))
+    #   @method_decorator(cache_page(60 * 1))
     def get(self, request, *args, **kwargs):
         try:
+            #   Buscamos todos los PostList registrados en cache
+            cached_post = cache.get("post_list")
+            if cached_post:
+                # Registro en redis el post_id del post gestionado
+                for post in cached_post:
+                    redis_client.incr(f"post:impressions:{post['id']}")
+                
+                #   Si existen retornamos esta informacion
+                return Response(cached_post)
+            
             #   Obtengo todos los post registrados, de tipo "Published"
             posts = Post.postobjects.all()
 
             if not posts.exists():
                 raise NotFound(detail="No post found")
 
+            #   En caso que "NO" exista esta información, se realiza el proceso normal de busqueda directo a la DB
             #   Convierto la lista de post en formato JSon
             serialized_post = PostListSerializer(posts, many=True).data
+            
+            #   Registro esta informacion en cache, 
+            #       Clave es "post_list" 
+            #       La informacion a registrar es serialized_post, 
+            #       Por un tiempo de 1 minuto (60*1)
+            cache.set("post_list", serialized_post, timeout=60*1)
 
-            # Registro en redis el post_id del post gestionado
+            #Registro en redis el post_id del post gestionado
             for post in posts:
                 redis_client.incr(f"post:impressions:{post.id}")
 
-        except Post.DoesNotExist:
-            raise NotFound(detail="No post found.")
         except Exception as e:
             raise APIException(detail=f"An unexpected error ocurred PostListView - L042: {str(e)}")
 
@@ -53,6 +70,11 @@ class PostDetailView(RetrieveAPIView):
 
     def get(self, request, slug):
         try:
+            #   Busco en cache por slug en la lista de post, buscabamos todos los post list guardados en cache, 
+            #   para este caso el key es PostList. Para el caso de DetailView buscamos en cache todos los post 
+            #   cuyo atributo post_detail sea equivalente a la variable slug
+            cached_post = cache.get(f"post_detail:{slug}")
+            
             post = Post.postobjects.get(slug=slug)
         except Post.DoesNotExist:
             raise NotFound(detail="The requested post does not exists")
@@ -61,21 +83,6 @@ class PostDetailView(RetrieveAPIView):
 
         serialized_post = PostSerializer(post).data
 
-        #
-        #   Version contador de visitas
-        #
-        # # Obtengo la direccion IP del usuario
-        # client_ip = get_client_ip(request)
-
-        # #   Verifico si el el post revisado por el usuario fue contabilizado
-        # #   Sí, ya fue registrado retorno la misma misma informacion del post
-        # if PostView.objects.filter(post=post, ip_address=client_ip).exists():
-        #     return Response(serialized_post)
-
-        # # Sino fue registrado lo cuento
-        # PostView.objects.create(post=post, ip_address=client_ip)
-
-        #
         #   Gestiona el control de visitas desde la opcion "Analitica"
         try:
             post_analytics = PostAnalytics.objects.get(post=post)
@@ -118,7 +125,7 @@ class IncrementPostClickView(APIView):
             post_analytics, created = PostAnalytics.objects.get_or_create(post=post)
             post_analytics.increment_click()
         except Exception as e:
-            raise APIException(detail=f"An error ocurred while updating post analytics:>>>>> {str(e)}")
+            raise APIException(detail=f"An error ocurred while updating post analytics:{str(e)}")
 
         return Response({
             "message": "Click increment successfully"
