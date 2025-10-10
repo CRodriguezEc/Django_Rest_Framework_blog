@@ -3,7 +3,7 @@ from celery import shared_task
 import logging
 import redis
 
-from .models import PostAnalytics
+from .models import PostAnalytics, Post
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,20 @@ def increment_post_impressions(post_id):
     except Exception as e:
         logger.info(f"Error incrementing impressions for PostId {post_id}: {str(e)}")
 
-# TAREA que sincroniza las impresiones almacenadas en DB-Redis con la BD propia del sistema        
+
+@shared_task
+def increment_post_views_task(slug, ip_address):
+    try:
+        post = Post.objects.get(slug=slug)
+        post_analytics = PostAnalytics.objects.get(post=post)
+        post_analytics.increment_view(ip_address)
+    except Exception as e:
+        logger.info(f"Error incrementing views for past slug {slug}: {str(e)}")
+
+
+# TAREA que sincroniza las impresiones almacenadas en DB-Redis con la BD propia del sistema 
+# y se ejecuta desde Celery-Beat
+
 @shared_task
 def sync_impressions_to_db():   
     # Recuperamos todos los post almacenados en DB-Redis
@@ -29,9 +42,15 @@ def sync_impressions_to_db():
             post_id = key.decode("utf-8").split(":")[-1]
             impressions = int(redis_client.get(key))
             
-            analytics, created = PostAnalytics.objects.get_or_create(post__id=post_id)
+            #   Se reemplaza el atributo "created" por el guion bajo("_") ya no se usa este atributo
+            analytics, _ = PostAnalytics.objects.get_or_create(post__id=post_id)
             analytics.impressions += impressions
+            #   Se almacena a nivel BD esta impresion
             analytics.save()
+            
+            #   Se ejecuta el metodo "increment_impressions", el cual incrementa el numero de impresiones 
+            #   y este valor lo registra en la BD
+            analytics.increment_impressions()
             
             # Una vez que se ejecuta la tarea en un determinado post, lo eliminamos Redis
             redis_client.delete(key)

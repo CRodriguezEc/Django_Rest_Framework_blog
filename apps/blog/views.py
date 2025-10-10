@@ -1,3 +1,4 @@
+from apps.blog.utils import get_client_ip
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework import permissions
@@ -18,6 +19,9 @@ from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, 
 
 # Importo la clase HasValidAPIKey, ubicada en el directorio "core", en el archivo permissions
 from core.permissions import HasValidAPIKey
+
+#   Importo las tarea
+from .tasks import increment_post_views_task
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
@@ -69,28 +73,31 @@ class PostDetailView(RetrieveAPIView):
     permissions_classes = [HasValidAPIKey]
 
     def get(self, request, slug):
+        ip_address = get_client_ip(request)
+        
         try:
             #   Busco en cache por slug en la lista de post, buscabamos todos los post list guardados en cache, 
             #   para este caso el key es PostList. Para el caso de DetailView buscamos en cache todos los post 
             #   cuyo atributo post_detail sea equivalente a la variable slug
             cached_post = cache.get(f"post_detail:{slug}")
+            if cached_post:
+                #   Incrementa las visitas en 2do plano - ejecutando una tarea de Celery
+                increment_post_views_task.delay(post.slug, ip_address)                
+                return Response(cached_post)
             
+            #   Sino esta en cache, obtengo esa informacion desde la DB 
             post = Post.postobjects.get(slug=slug)
+            serialized_post = PostSerializer(post).data
+
+            #   Guardo en cache esta información            
+            cache.set(f"post_detail:{slug}", serialized_post, timeout= 60 * 5)
+
+            #   Incrementa las vistas en 2do plano - ejecutando una tarea de Celery
+            increment_post_views_task.delay(post.slug, ip_address)            
         except Post.DoesNotExist:
             raise NotFound(detail="The requested post does not exists")
         except Exception as e:
             raise APIException(detail=f"An unexpected error ocurreed: {str(e)}")
-
-        serialized_post = PostSerializer(post).data
-
-        #   Gestiona el control de visitas desde la opcion "Analitica"
-        try:
-            post_analytics = PostAnalytics.objects.get(post=post)
-            post_analytics.increment_view(request)
-        except PostAnalytics.DoesNotExist:
-            raise NotFound(detail="Analytics data for this post does not exists")
-        except Exception as e:
-            raise APIException(detail=f"An error ocurred while updating post analytics:---> {str(e)}")
 
         #   Retorno la informacion del post
         return Response(serialized_post)
