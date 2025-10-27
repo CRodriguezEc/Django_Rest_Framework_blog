@@ -55,7 +55,7 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = [  "id",
                     "title",
                     "description",
-                    "tumbnail",
+                    "thumbnail",
                     "slug",
                     "category",
                     "view_count" ]

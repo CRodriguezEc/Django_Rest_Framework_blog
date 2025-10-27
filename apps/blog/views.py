@@ -64,7 +64,7 @@ class PostListView(APIView):
                 redis_client.incr(f"post:impressions:{post.id}")
 
         except Exception as e:
-            raise APIException(detail=f"An unexpected error ocurred PostListView - L042: {str(e)}")
+            raise APIException(detail=f"An unexpected error occurred PostListView - L042: {str(e)}")
 
         return Response(serialized_post)
 

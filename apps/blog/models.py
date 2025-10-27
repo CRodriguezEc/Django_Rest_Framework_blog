@@ -13,10 +13,10 @@ from django.utils.text import slugify
 from ckeditor.fields import RichTextField
 from .utils import get_client_ip
 
-def blog_tumbnail_directory(instance, filename):
+def blog_thumbnail_directory(instance, filename):
     return "blog/{0}/{1}".format( instance.title, filename )
 
-def category_tumbnail_directory(instance, filename):
+def category_thumbnail_directory(instance, filename):
     return "blog_categories/{0}/{1}".format( instance.name, filename )
 
 
@@ -36,7 +36,7 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField()
-    tumbnail = models.ImageField(upload_to=category_tumbnail_directory)
+    thumbnail = models.ImageField(upload_to=category_thumbnail_directory)
     slug = models.CharField(max_length=128)
     
     def __str__(self):
@@ -60,11 +60,10 @@ class Post( models.Model ):
 
     title = models.CharField(max_length=128)
     description= models.CharField(max_length=256)
-    # content = models.TextField()  #   Solo caja de texto
-    
+
     #   Asociamos el CKEditor a la caja de texto
     content = RichTextField()       
-    tumbnail = models.ImageField(upload_to='blog_post/')
+    thumbnail = models.ImageField(upload_to='blog_post/')
     keywords = models.CharField(max_length=128)
     slug = models.CharField(max_length=128)
     

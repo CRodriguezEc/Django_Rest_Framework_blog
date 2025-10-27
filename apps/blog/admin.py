@@ -29,7 +29,7 @@ class PostAdmin(admin.ModelAdmin):
     readonly_fields = ('id', 'created_at', 'updated_at')
     
     fieldsets = ( 
-        ('General Information', {'fields':( 'title', 'description', 'content', 'tumbnail', 'keywords', 'slug', 'category' )}),
+        ('General Information', {'fields':( 'title', 'description', 'content', 'thumbnail', 'keywords', 'slug', 'category' )}),
         ('Status & Days',       {'fields':( 'status', 'created_at', 'updated_at' ) } ),
     )
     
