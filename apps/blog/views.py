@@ -1,6 +1,7 @@
 from apps.blog.utils import get_client_ip
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.views import APIView
+from rest_framework_api.views import StandardAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, APIException
@@ -25,7 +26,7 @@ from .tasks import increment_post_views_task
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
-class PostListView(APIView):
+class PostListView(StandardAPIView):
     #   Valida si el usuario tiene el key de ingreso
     permission_classes = [HasValidAPIKey]
     
@@ -41,7 +42,8 @@ class PostListView(APIView):
                     redis_client.incr(f"post:impressions:{post['id']}")
                 
                 #   Si existen retornamos esta informacion
-                return Response(cached_post)
+                # return Response(cached_post)
+                return self.paginate(request, cached_post)
             
             #   Obtengo todos los post registrados, de tipo "Published"
             posts = Post.postobjects.all()
@@ -66,9 +68,9 @@ class PostListView(APIView):
         except Exception as e:
             raise APIException(detail=f"An unexpected error occurred PostListView - L042: {str(e)}")
 
-        return Response(serialized_post)
+        return self.paginate(request, serialized_post)
 
-class PostDetailView(RetrieveAPIView):
+class PostDetailView(StandardAPIView):
     #   Valida si el usuario tiene el key de ingreso
     permissions_classes = [HasValidAPIKey]
 
@@ -76,14 +78,16 @@ class PostDetailView(RetrieveAPIView):
         ip_address = get_client_ip(request)
         
         try:
+            slug = request.query_params.get['slug']
+            
             #   Busco en cache por slug en la lista de post, buscabamos todos los post list guardados en cache, 
             #   para este caso el key es PostList. Para el caso de DetailView buscamos en cache todos los post 
             #   cuyo atributo post_detail sea equivalente a la variable slug
             cached_post = cache.get(f"post_detail:{slug}")
             if cached_post:
                 #   Incrementa las visitas en 2do plano - ejecutando una tarea de Celery
-                increment_post_views_task.delay(post.slug, ip_address)                
-                return Response(cached_post)
+                increment_post_views_task.delay(cached_post['slug'], ip_address)                
+                return self.response(cached_post)
             
             #   Sino esta en cache, obtengo esa informacion desde la DB 
             post = Post.postobjects.get(slug=slug)
@@ -100,20 +104,22 @@ class PostDetailView(RetrieveAPIView):
             raise APIException(detail=f"An unexpected error ocurreed: {str(e)}")
 
         #   Retorno la informacion del post
-        return Response(serialized_post)
+        return self.response(serialized_post)
 
 #   Obtenemos los heading de un determinado post
-class PostHeadingView(ListAPIView):
+class PostHeadingView(StandardAPIView):
     #   Valida si el usuario tiene el key de ingreso
     permissions_classes = [HasValidAPIKey]
-
     serializer_class = HeadingSerializer
 
-    def get_queryset(self):
-        post_slug = self.kwargs.get("slug")
-        return Heading.objects.filter( post__slug = post_slug )
+    def get(self, request):
+        post_slug = request.query_params.get("slug")
+        heading_objects = Heading.objects.filter(post__slug = post_slug)
+        serialized_data = HeadingSerializer(heading_objects, many=True).data
 
-class IncrementPostClickView(APIView):
+        return self.response(serialized_data)
+
+class IncrementPostClickView(StandardAPIView):
     #   Valida si el usuario tiene el key de ingreso
     permissions_classes = [HasValidAPIKey]
 
@@ -134,7 +140,7 @@ class IncrementPostClickView(APIView):
         except Exception as e:
             raise APIException(detail=f"An error ocurred while updating post analytics:{str(e)}")
 
-        return Response({
+        return self.response({
             "message": "Click increment successfully"
             ,   "clicks": post_analytics.clicks
         })

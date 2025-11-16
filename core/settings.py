@@ -54,6 +54,7 @@ PROJECT_APPS = [
 #   APLICACIONES DE 3ros COMO FRAMEWORKS, LIBRERIAS...
 THIRD_PARTY_APPS = [
     'rest_framework',
+    'rest_framework_api',
     'channels',
     'ckeditor',
     'ckeditor_uploader',
@@ -95,6 +96,8 @@ TEMPLATES = [
         },
     },
 ]
+
+MAX_PAGE_SIZE = 100
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
