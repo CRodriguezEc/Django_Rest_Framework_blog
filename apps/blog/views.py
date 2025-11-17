@@ -74,12 +74,14 @@ class PostDetailView(StandardAPIView):
     #   Valida si el usuario tiene el key de ingreso
     permissions_classes = [HasValidAPIKey]
 
-    def get(self, request, slug):
+    def get(self, request):
         ip_address = get_client_ip(request)
+        slug = request.query_params.get("slug")
+        
+        if not slug:
+            raise NotFound(detail="A valid slug must be provided")
         
         try:
-            slug = request.query_params.get['slug']
-            
             #   Busco en cache por slug en la lista de post, buscabamos todos los post list guardados en cache, 
             #   para este caso el key es PostList. Para el caso de DetailView buscamos en cache todos los post 
             #   cuyo atributo post_detail sea equivalente a la variable slug
