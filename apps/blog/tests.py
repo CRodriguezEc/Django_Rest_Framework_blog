@@ -122,7 +122,14 @@ class PostListViewTest(TestCase):
             ,   category=self.category
             ,   status="published"
         )
-        
+
+    #   Funcion que se ejecuta automaticamente despues de cada prueba
+    #   Su objetivo es limpiar el entorno de prueba
+    #   para asegurar que cada prueba sea independiente y no se vea 
+    #   afectada por las acciones de pruebas anteriores
+    def tearDown(self):
+        cache.clear
+
     def test_get_post_list(self):
         #   Hacemos uso del metodo "reverse" el cual es un metodo propio de django 
         #   el cual identifica una determinada "url" mediante el atributo "name" de 
@@ -158,32 +165,40 @@ class PostListViewTest(TestCase):
         
         self.assertIsNone(data['next'])
         self.assertIsNone(data['previous'])
-        
-        
-        
+
 
 class PostDetailViewTest(TestCase):
     def setUp(self):
+        #   Definimos el cliente
         self.client = APIClient()
+
+        #   Limpiamos el cache
         cache.clear()
 
         # Configuración de la API-Key de prueba
         self.api_key = settings.VALID_API_KEYS[0]
 
-        # Crear datos de prueba
-        self.category = Category.objects.create(name="Detail Category", slug="detail-category")
-        self.post = Post.objects.create(
-            title="Detail Post",
-            description="Detailed post description",
-            content="Detailed content",
-            slug="detail-post",
-            category=self.category,
-            status="published"
-        )
+        # Creamos el dato categoria
+        self.category = Category.objects.create(name="Detail Category"
+                                                ,   slug="detail-category")
 
+        #   Creamos el objeto post
+        self.post = Post.objects.create(title="Detail Post",
+                                        description="Detailed post description",
+                                        content="Detailed content",
+                                        slug="detail-post",
+                                        category=self.category,
+                                        status="published" )
+
+    #   Funcion que se ejecuta automaticamente despues de cada prueba
+    #   Su objetivo es limpiar el entorno de prueba
+    #   para asegurar que cada prueba sea independiente y no se vea 
+    #   afectada por las acciones de pruebas anteriores
     def tearDown(self):
         cache.clear() 
     
+    #   Suplantamos (mock) el metodo increment_post_views_task de una tarea
+    #   Probamos de forma aislada sin ejecutar el codigo real
     @patch('apps.blog.tasks.increment_post_views_task.delay')
     def test_get_post_detail_success(self, mock_increment_views):
         """
@@ -231,6 +246,8 @@ class PostDetailViewTest(TestCase):
 
         mock_increment_views.assert_called_once_with(self.post.slug, '127.0.0.1')  # IP predeterminada en tests
 
+    #   Suplantamos (mock) el metodo increment_post_views_task de una tarea
+    #   Probamos de forma aislada sin ejecutar el codigo real
     @patch('apps.blog.tasks.increment_post_views_task.delay')
     def test_get_post_detail_not_found(self, mock_increment_views):
         """
@@ -253,4 +270,150 @@ class PostDetailViewTest(TestCase):
 
         # Verifica el mensaje de error
         self.assertIn('detail', data)
-        self.assertEqual(data['detail'], "The requested post does not exist")
+        self.assertEqual(data['detail'], "The requested post does not exists")
+
+
+class PostHeadingsViewTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        cache.clear
+        
+        self.api_key = settings.VALID_API_KEYS[0]
+        self.category = Category.objects.create(
+                            name="Test Category"
+                            ,   slug="test-category")
+
+        self.post = Post.objects.create(
+            title="Post with Headings"
+            ,   description = "Post with multiple headings"
+            ,   content="Content"
+            ,   slug="post-with-headings"
+            ,   category = self.category
+            ,   status="published"
+        )
+        
+        self.heading1 = Heading.objects.create(
+            post=self.post
+            ,   title="Heading 1"
+            ,   slug="heading-1"
+            ,   level=1
+            ,   order=1
+        )
+        
+        self.heading2 = Heading.objects.create(
+            post=self.post
+            ,   title="Heading 2"
+            ,   slug="heading-2"
+            ,   level=2
+            ,   order=2
+        )
+
+    #   Funcion que se ejecuta automaticamente despues de cada prueba
+    #   Su objetivo es limpiar el entorno de prueba
+    #   para asegurar que cada prueba sea independiente y no se vea 
+    #   afectada por las acciones de pruebas anteriores
+    def tearDown(self):
+        cache.clear        
+
+    #   Test para obtener encabezados de un post existente
+    def test_get_post_heading_sucess(self):
+        url = reverse('post-headings') + f"?slug={self.post.slug}"
+        
+        # Simula una solicitud GET con encabezado API-Key
+        response = self.client.get(
+            url,
+            HTTP_API_KEY=self.api_key
+        )
+
+        self.assertEqual(   response.status_code
+                            , status.HTTP_200_OK )
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 200)
+        self.assertIn('results', data)
+        
+        results = data['results']
+        self.assertEqual(len(results), 2)
+        
+        self.assertEqual(results[0]['title'], self.heading1.title)
+        self.assertEqual(results[0]['slug'], self.heading1.slug)
+        self.assertEqual(results[0]['level'], self.heading1.level)
+        
+        self.assertEqual(results[1]['title'], self.heading2.title)
+        self.assertEqual(results[1]['slug'], self.heading2.slug)
+        self.assertEqual(results[1]['level'], self.heading2.level)
+        
+    #   Test para verificar que "no" se encuentran los encabezados para un slug
+    def test_get_post_headings_not_found(self):
+        url = reverse('post-headings')+"?slug=non-existent-slug"
+        response = self.client.get(url
+                                    ,    HTTP_API_KEY=self.api_key )
+        
+        self.assertEqual(   response.status_code
+                            , status.HTTP_200_OK )
+        
+        data = response.json()
+        
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 200)
+        self.assertEqual(len(data['results']), 0)
+
+
+class IncrementPostClickViewTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        cache.clear()
+        
+        self.api_key = settings.VALID_API_KEYS[0]
+        
+        self.category = Category.objects.create(name="Analytics Category"
+                                                ,   slug="analytics-category" )
+        
+        self.post = Post.objects.create(
+            title="Post for Analytics"
+            ,   description="post description"
+            ,   content="content"
+            ,   slug="post-for-analytics"
+            ,   category=self.category
+            ,   status="published"
+        )
+
+    #   Funcion que se ejecuta automaticamente despues de cada prueba
+    #   Su objetivo es limpiar el entorno de prueba
+    #   para asegurar que cada prueba sea independiente y no se vea 
+    #   afectada por las acciones de pruebas anteriores
+    def tearDown(self):
+        cache.clear
+
+    #   Test para incrementar clicks exitosamente
+    def test_increment_post_click_success(self):
+        url = reverse('increment-post-click')
+        response = self.client.post(url
+                                    ,   {"slug": self.post.slug}
+                                    ,   HTTP_API_KEY=self.api_key
+                                    ,   format='json' )
+
+        data = response.json()
+        
+        self.assertIn('success', data)
+        self.assertTrue(data['success'])
+        self.assertIn('status', data )
+        self.assertEqual(data['status'], 200)
+        self.assertIn('results', data)
+        
+        #   Verifica el contenido de los resultados
+        results = data['results']
+        self.assertIn('message', results)
+        self.assertEqual(results['message'], "Click increment successfully")
+        self.assertIn('clicks', results)
+        
+        #   Verifica que los clicks han incrementado correctamente
+        #   El contador debe ser "1" en la primera llamada
+        self.assertEqual(results['clicks'], 1)
+        
+        #   Verifica el estado del modelo 'PostAnalytics'
+        from apps.blog.models import PostAnalytics
+        post_analytics = PostAnalytics.objects.get(post=self.post)
+        self.assertEqual(post_analytics.clicks, 1)
+        
